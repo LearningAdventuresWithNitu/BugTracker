@@ -34,12 +34,12 @@ async function createBugList() {
 							});
 						if (bug[0] != '') {
 							// addBugToList adds a bug as a child of the <ul> tag
-							addBugToList(bugIndex, bug[1], bug[2], bug[3]);
+							addBugToList(bugIndex, bug[0], bug[1], bug[2], bug[3]);
 						} else {
 							console.log('The index is empty: ' + bugIndex);
 						}
-					} catch {
-						console.log('Failed to get bug: ' + bugIndex);
+					} catch (e) {
+						console.log('Failed to get bug: ' + bugIndex + e);
 					}
 					bugIndex++;
 				}
@@ -52,7 +52,7 @@ async function createBugList() {
 	}
 }
 
-function addBugToList(id, name, level, status) {
+function addBugToList(id, bugId, name, level, status) {
 	// get the id of the <ul> then append children to it
 	let list = document.getElementById('list');
 	let item = document.createElement('li');
@@ -64,17 +64,34 @@ function addBugToList(id, name, level, status) {
 		'align-items-center'
 	);
 	item.id = 'item-' + id;
+
+	// create a text node to display the bug id
+	let bugIdNode = document.createTextNode(bugId);
+	let bugIdSpan = document.createElement('span');
+    bugIdSpan.appendChild(bugIdNode);
+
 	// add text to the <li> element
-	let bug = document.createTextNode(name);	
+	let bug = document.createTextNode(name);
 
 	// create a input element of type range to show levels of bug
 	var range = document.createElement('INPUT');
 	range.setAttribute('type', 'range');
+	range.setAttribute('id', 'item-' + id + '-range');
 	range.setAttribute('min', '0');
-	range.setAttribute('max', '3');
-	range.setAttribute('value', level + 1n);
-	item.appendChild(range);
+	range.setAttribute('max', '2');
+	range.setAttribute('value', level);
 
+	// change the background color of the bug depending on the level
+	// 0: low, 1: medium, 2: high
+	// green: low, yellow: medium, red: high
+	if(level == 2){
+		item.classList.add('bg-danger')
+	} else if(level == 1){
+		item.classList.add('bg-warning')
+	}
+	else{
+		item.classList.add('bg-success')
+	}
 	
 	// create a checkbox and set its id and status
 	var checkbox = document.createElement('INPUT');
@@ -85,9 +102,23 @@ function addBugToList(id, name, level, status) {
 	if (status) {
 		item.classList.add('bug-done');
 	}
-	list.appendChild(item);
+
+
+	let inputContainer = document.createElement('div');
+    inputContainer.classList.add('input-container');
+    inputContainer.appendChild(range);
+    inputContainer.appendChild(checkbox);
+	
+	item.appendChild(bugIdSpan);
 	item.appendChild(bug);
-	item.appendChild(checkbox);
+	item.appendChild(inputContainer);
+
+	list.appendChild(item);
+	
+	range.onchange = function () {
+		changeBugLevel(range.id, id);
+	};
+
 	checkbox.onclick = function () {
 		changeBugStatus(checkbox.id, id);
 	};
@@ -117,20 +148,40 @@ async function changeBugStatus(id, bugIndex) {
 	}
 }
 
-// change critical level of bug stored on the blockchain
-// async function changeBugLevel(id, bugIndex) {
-// 	// get range element
-// 	let range = document.getElementById(id);
-// 	try {
-// 		await contract.methods
-// 			.updateBugLevel(bugIndex, range.value - 1n)
-// 			.send({
-// 				from: web3.eth.defaultAccount
-// 			});
-// 	} catch (error) {
-// 		console.log('Failed to change level of bug. Index: ' + bugIndex);
-// 	}
-// }
+// change critical level of bug stored on the blockchain when the range input is changed
+async function changeBugLevel(id, bugIndex, e) {
+	// get range element
+	let range = document.getElementById(id);
+	let textId = id.replace('-range', '');
+	// get the <li> element
+	let text = document.getElementById(textId);
+	try {
+		await contract.methods
+			.updateBugLevel(bugIndex, range.value)
+			.send({
+				from: web3.eth.defaultAccount
+			});
+		// change the background color of the bug depending on the level
+		// 0: low, 1: medium, 2: high
+		// green: low, yellow: medium, red: high
+		if(range.value == 2){
+			text.classList.remove('bg-success')
+			text.classList.remove('bg-warning')
+			text.classList.add('bg-danger')
+		} else if(range.value == 1){
+			text.classList.remove('bg-success')
+			text.classList.add('bg-warning')
+			text.classList.remove('bg-danger')
+		}
+		else{
+			text.classList.add('bg-success')
+			text.classList.remove('bg-warning')
+			text.classList.remove('bg-danger')
+		}
+	} catch (error) {
+		console.log('Failed to change level of bug. Index: ' + bugIndex);
+	}
+}
 
 async function addBug(name) {
 	let form = document.getElementById('add-bug-container');
@@ -143,7 +194,7 @@ async function addBug(name) {
 		})
 		.then(
 			(bugNum) => {
-				addBugToList(bugNum, name, false);
+				addBugToList(bugNum, "BUG-"+(bugNum+1n).toString(), name, 0, false);
 			},
 			(err) => {
 				console.log('Failed to retrieve the number of bugs from Ganache.');
@@ -151,7 +202,7 @@ async function addBug(name) {
 		);
 	try {
 		await contract.methods
-			.addBug(name, false)
+			.addBug(name)
 			.send({
 				from: web3.eth.defaultAccount
 			});

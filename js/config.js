@@ -1,8 +1,7 @@
 // Use Remix to deploy smart contract to local Ganache blockchain.
 // Make note of the address the contract was deployed to, and paste it below.
 
-// let contractAddress = '0x9F1209AaAAcbcda461e02A5dAB905c748CDA382f';
-let contractAddress = '0xB50c8E7aD0ad588000603b9C604bf75dDe739Ce3';
+let contractAddress = '0x0A494128dbC4f18cA25CB408328BA8680E3887b1';
 
 // Define the smart contract ABI (Application Binary Interface).
 // This is a JSON representation of the functions in the smart contract.
@@ -30,6 +29,24 @@ let contractABI =
 			}
 		],
 		"name": "deleteBug",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_bugIndex",
+				"type": "uint256"
+			},
+			{
+				"internalType": "enum BugTracker.criticalLevels",
+				"name": "_level",
+				"type": "uint8"
+			}
+		],
+		"name": "updateBugLevel",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -79,7 +96,7 @@ let contractABI =
 				"components": [
 					{
 						"internalType": "string",
-						"name": "bugID",
+						"name": "bugId",
 						"type": "string"
 					},
 					{
