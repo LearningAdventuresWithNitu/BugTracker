@@ -103,12 +103,19 @@ function addBugToList(id, bugId, name, level, status) {
 		item.classList.add('bug-done');
 	}
 
+	let deleteButton = document.createElement('button');
+	deleteButton.classList.add('btn', 'btn-dark');
+	deleteButton.innerHTML = 'Delete';
+	deleteButton.onclick = function () {
+		deleteBugFromList(id);
+	}
 
 	let inputContainer = document.createElement('div');
     inputContainer.classList.add('input-container');
     inputContainer.appendChild(range);
     inputContainer.appendChild(checkbox);
-	
+	inputContainer.appendChild(deleteButton);
+
 	item.appendChild(bugIdSpan);
 	item.appendChild(bug);
 	item.appendChild(inputContainer);
@@ -204,9 +211,32 @@ async function addBug(name) {
 		await contract.methods
 			.addBug(name)
 			.send({
+				from: web3.eth.defaultAccount,
+				gas: 3000000
+			});
+	} catch (e) {
+		console.log('Failed to save bug to blockchain.' + e);
+	}
+}
+
+// delete bug from blockchain and remove from bug list as well
+async function deleteBugFromList(bugIndex) {
+	try {
+		await deleteBug(bugIndex);
+		document.getElementById('item-' + bugIndex).remove();
+	} catch {
+		console.log('Failed to delete bug from list.');
+	}
+}
+
+async function deleteBug(bugIndex) {
+	try {
+		await contract.methods
+			.deleteBug(bugIndex)
+			.send({
 				from: web3.eth.defaultAccount
 			});
 	} catch {
-		console.log('Failed to save bug to blockchain.');
+		console.log('Failed to delete bug from blockchain.');
 	}
 }

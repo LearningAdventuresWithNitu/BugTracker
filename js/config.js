@@ -1,7 +1,7 @@
 // Use Remix to deploy smart contract to local Ganache blockchain.
 // Make note of the address the contract was deployed to, and paste it below.
 
-let contractAddress = '0x0A494128dbC4f18cA25CB408328BA8680E3887b1';
+let contractAddress = '0x43E8bBE53516fBE75EA2869714Afa0Bb71E629A0';
 
 // Define the smart contract ABI (Application Binary Interface).
 // This is a JSON representation of the functions in the smart contract.
